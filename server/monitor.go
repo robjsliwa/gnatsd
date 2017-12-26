@@ -458,8 +458,8 @@ func (s *Server) HandleRoot(w http.ResponseWriter, r *http.Request) {
 </html>`)
 }
 
-// HandleVarz will process HTTP requests for server information.
-func (s *Server) HandleVarz(w http.ResponseWriter, r *http.Request) {
+// Varz returns a Varz struct containing the server information.
+func (s *Server) Varz() *Varz {
 	// Snapshot server options.
 	opts := s.getOpts()
 
@@ -491,6 +491,12 @@ func (s *Server) HandleVarz(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Unlock()
 
+	return v
+}
+
+// HandleVarz will process HTTP requests for server information.
+func (s *Server) HandleVarz(w http.ResponseWriter, r *http.Request) {
+	v := s.Varz()
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		s.Errorf("Error marshaling response to /varz request: %v", err)
