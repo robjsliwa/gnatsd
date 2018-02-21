@@ -166,6 +166,7 @@ Authorization Options:
         --user <user>                User required for connections
         --pass <password>            Password required for connections
         --auth <token>               Authorization token required for connections
+        --jwt <jwt>                  Authorization jwt required for connections
 
 TLS Options:
         --tls                        Enable TLS, do not verify clients (default: false)
@@ -248,7 +249,7 @@ max_control_line: 512
 # maximum payload
 max_payload: 65536
 
-# Duration the server can block on a socket write to a client.  Exceeding the 
+# Duration the server can block on a socket write to a client.  Exceeding the
 # deadline will designate a client as a slow consumer.
 write_deadline: "2s"
 ```
@@ -475,7 +476,7 @@ authorization {
 >If you chose to use a token for client's authentication and generate the token by `/util/mkpasswd.go` then you must use the generated bcrypt hash as the token in server config, as written above, and the generated pass as the token in client configurations.
 
 ```
-$ go run util/mkpasswd.go 
+$ go run util/mkpasswd.go
 pass: D#6)e0ht^@61kU5!^!owrX // NATS client token
 bcrypt hash: $2a$11$bXz1Mi5xM.rRUnYRT0Vb2el6sSzVrqA0DJKdt.5Itj1C1K4HT9FDG // server authorization token
 ```

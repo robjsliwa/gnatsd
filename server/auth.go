@@ -136,6 +136,9 @@ func (s *Server) isClientAuthorized(c *client) bool {
 	} else if opts.Authorization != "" {
 		return comparePasswords(opts.Authorization, c.opts.Authorization)
 
+	} else if opts.Jwt != "" {
+		return comparePasswords(opts.Jwt, c.opts.Jwt)
+
 	} else if opts.Username != "" {
 		if opts.Username != c.opts.Username {
 			return false

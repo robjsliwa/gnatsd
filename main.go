@@ -35,6 +35,7 @@ Authorization Options:
         --user <user>                User required for connections
         --pass <password>            Password required for connections
         --auth <token>               Authorization token required for connections
+				--jwt <jwt>                  Authorization jwt required for connections
 
 TLS Options:
         --tls                        Enable TLS, do not verify clients (default: false)

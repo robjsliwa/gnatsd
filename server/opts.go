@@ -49,6 +49,7 @@ type Options struct {
 	Username       string        `json:"-"`
 	Password       string        `json:"-"`
 	Authorization  string        `json:"-"`
+	Jwt            string        `json:"-"`
 	PingInterval   time.Duration `json:"ping_interval"`
 	MaxPingsOut    int           `json:"ping_max"`
 	HTTPHost       string        `json:"http_host"`
@@ -115,6 +116,7 @@ type authorization struct {
 	user  string
 	pass  string
 	token string
+	jwt   string
 	// Multiple Users
 	users              []*User
 	timeout            float64
@@ -221,8 +223,9 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 			o.Username = auth.user
 			o.Password = auth.pass
 			o.Authorization = auth.token
-			if (auth.user != "" || auth.pass != "") && auth.token != "" {
-				return fmt.Errorf("Cannot have a user/pass and token")
+			o.Jwt = auth.jwt
+			if (auth.user != "" || auth.pass != "") && (auth.token != "" || auth.jwt != "") {
+				return fmt.Errorf("Cannot have a user/pass and token or jwt")
 			}
 			o.AuthTimeout = auth.timeout
 			// Check for multiple users defined
@@ -232,6 +235,9 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 				}
 				if auth.token != "" {
 					return fmt.Errorf("Can not have a token and a users array")
+				}
+				if auth.jwt != "" {
+					return fmt.Errorf("Can not have a jwt and a users array")
 				}
 				o.Users = auth.users
 			}
@@ -407,6 +413,8 @@ func parseAuthorization(am map[string]interface{}) (*authorization, error) {
 			auth.pass = mv.(string)
 		case "token":
 			auth.token = mv.(string)
+		case "jwt":
+			auth.jwt = mv.(string)
 		case "timeout":
 			at := float64(1)
 			switch mv.(type) {
@@ -952,6 +960,7 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 	fs.StringVar(&opts.Username, "user", "", "Username required for connection.")
 	fs.StringVar(&opts.Password, "pass", "", "Password required for connection.")
 	fs.StringVar(&opts.Authorization, "auth", "", "Authorization token required for connection.")
+	fs.StringVar(&opts.Jwt, "jwt", "", "Authorization jwt required for connection")
 	fs.IntVar(&opts.HTTPPort, "m", 0, "HTTP Port for /varz, /connz endpoints.")
 	fs.IntVar(&opts.HTTPPort, "http_port", 0, "HTTP Port for /varz, /connz endpoints.")
 	fs.IntVar(&opts.HTTPSPort, "ms", 0, "HTTPS Port for /varz, /connz endpoints.")

@@ -172,6 +172,7 @@ type clientOpts struct {
 	Pedantic      bool   `json:"pedantic"`
 	SslRequired   bool   `json:"ssl_required"`
 	Authorization string `json:"auth_token"`
+	Jwt           string `json:"auth_jwt"`
 	Username      string `json:"user"`
 	Password      string `json:"pass"`
 	Name          string `json:"name"`
