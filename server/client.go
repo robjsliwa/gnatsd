@@ -255,6 +255,38 @@ func (c *client) RegisterUser(user *User) {
 	}
 }
 
+func (c *client) RegisterJwt(jwtPermissions *Permissions) {
+	if jwtPermissions == nil {
+		// Reset perms to nil in case client previously had them.
+		c.mu.Lock()
+		c.perms = nil
+		c.mu.Unlock()
+		return
+	}
+
+	// Process Permissions and map into client connection structures.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Pre-allocate all to simplify checks later.
+	c.perms = &permissions{}
+	c.perms.sub = NewSublist()
+	c.perms.pub = NewSublist()
+	c.perms.pcache = make(map[string]bool)
+
+	// Loop over publish permissions
+	for _, pubSubject := range jwtPermissions.Publish {
+		sub := &subscription{subject: []byte(pubSubject)}
+		c.perms.pub.Insert(sub)
+	}
+
+	// Loop over subscribe permissions
+	for _, subSubject := range jwtPermissions.Subscribe {
+		sub := &subscription{subject: []byte(subSubject)}
+		c.perms.sub.Insert(sub)
+	}
+}
+
 func (c *client) readLoop() {
 	// Grab the connection off the client, it will be cleared on a close.
 	// We check for that after the loop, but want to avoid a nil dereference
@@ -820,6 +852,7 @@ func (c *client) processSub(argo []byte) (err error) {
 // canSubscribe determines if the client is authorized to subscribe to the
 // given subject. Assumes caller is holding lock.
 func (c *client) canSubscribe(sub []byte) bool {
+	// TODO: (ROB) - validate JWT and permissions in JWT match requested permissions
 	if c.perms == nil {
 		return true
 	}

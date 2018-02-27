@@ -5,6 +5,7 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -137,8 +138,19 @@ func (s *Server) isClientAuthorized(c *client) bool {
 		return comparePasswords(opts.Authorization, c.opts.Authorization)
 
 	} else if opts.Jwt != "" {
-		return comparePasswords(opts.Jwt, c.opts.Jwt)
+		token, authErr := s.authJwt.authenticateToken(c.opts.Jwt)
+		if authErr != nil {
+			return false
+		}
+		//return comparePasswords(opts.Jwt, c.opts.Jwt)
 
+		jwtPermissions, permErr := s.authJwt.getJwtPermissions(token)
+		if permErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", permErr)
+			return false
+		}
+		c.RegisterJwt(jwtPermissions)
+		return true
 	} else if opts.Username != "" {
 		if opts.Username != c.opts.Username {
 			return false

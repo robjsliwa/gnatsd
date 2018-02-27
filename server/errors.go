@@ -33,4 +33,10 @@ var (
 	// ErrClientConnectedToRoutePort represents an error condition when a client
 	// attempted to connect to the route listen port.
 	ErrClientConnectedToRoutePort = errors.New("Attempted To Connect To Route Port")
+
+	// ErrInvalidClaims - JWT claims are missing or invalid
+	ErrInvalidClaims = errors.New("Invalid claims")
+
+	// ErrInvalidPermissionsClaim - permissions claim format is invalid
+	ErrInvalidPermissionsClaim = errors.New("Permissions claim format is invalid")
 )

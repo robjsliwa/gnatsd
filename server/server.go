@@ -90,6 +90,9 @@ type Server struct {
 	// not set any timeout.
 	monitoringServer *http.Server
 	profilingServer  *http.Server
+
+	// Auth for Jwt
+	authJwt *AuthJwt
 }
 
 // Make sure all are 64bits for atomic use
@@ -108,6 +111,13 @@ func New(opts *Options) *Server {
 	// Process TLS options, including whether we require client certificates.
 	tlsReq := opts.TLSConfig != nil
 	verify := (tlsReq && opts.TLSConfig.ClientAuth == tls.RequireAndVerifyClientCert)
+
+	// Initialize JWT auth
+	authJwt := NewAuthJwt()
+	fileErr := authJwt.readPublicKey(opts.Jwt)
+	if fileErr != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", fileErr)
+	}
 
 	info := Info{
 		ID:                genID(),
@@ -132,6 +142,7 @@ func New(opts *Options) *Server {
 		done:       make(chan bool, 1),
 		start:      now,
 		configTime: now,
+		authJwt:    authJwt,
 	}
 
 	s.mu.Lock()
