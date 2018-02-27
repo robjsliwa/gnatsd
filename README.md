@@ -1,3 +1,74 @@
+# gnatsd with JWT support
+This is a fork of gnatsd to add support for JWT based authentication.
+
+With these changes you can authenticate clients using JWT that contains permissions claim to specify both subscription and publish rights.  To make it easy to test it wrote simple JWT generator where that can build test JWTs with appropriate payload.  See https://github.com/robjsliwa/jwt-generator
+
+# Generate test JWT
+For the sample test we will use two JWTs one for the publishing client and one for subscribing clients.
+
+## Publish JWT
+First create publish-jwt.yaml to specify the permissions:
+
+```
+expires: 360
+
+claims:
+  - iss:jwt-generator
+  - permissions:publish:>
+
+keys:
+  public: ./jwt-public
+  private: "./jwt-private"
+```
+
+expires field specfifes how long the JWT is valid.  keys fields point to public/private key pair to use to sign/verify JWT.  If the files do not exist jwt-generator will create new set of keys that can be used for later.
+
+permission claim is what tells nats.io what subject client can publish or subscribe to.  In this case our publishing client will use > wildcard to be able to publish to any subject.  
+
+```
+./jwt-generator publish-jwt.yaml
+Loading private key: ./jwt-private...
+Token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTk3Nzg0MTYsImlhdCI6MTUxOTc1NjgxNiwiaXNzIjoiand0LWdlbmVyYXRvciIsInBlcm1pc3Npb25zIjoicHVibGlzaDpcdTAwM2UifQ.Eczi9mEfdotu502UNrEvgJreYX5IFFyuOnsuTRCSWsVsODfeRagA-0hJ48RLIJo5uGuhQsOKfSdoPWLx-VIVC2GySYLEJvxDTwGwtaxn4SQz4YBUE5NwZKVnKrPDGqFcaihD07LPu4BcCpIbVvYHHpyLRFeYDMCGcnbtssvSUbWRO9yoTULSuFDBJg4FRDFnFy0iKpqx3WIBVV1f-XHAghT82Zb1ETgASIDxsEj045G5saDSl9ZEhWZxOscFArcs2ECoUVDbCfank4yv0tTjshPQjYEE4_sA_LjAw6VYYT3n8MEuMpE4AvmOSFjCOTa6o9fg1oiS7yc3IqfDbzdq2Q
+```
+
+For subscribe-jwt.yaml:
+```
+expires: 360
+
+claims:
+  - iss:jwt-generator
+  - permissions:subscribe:foo subscribe:bar
+
+keys:
+  public: ./jwt-public
+  private: "./jwt-private"
+```
+
+```
+./jwt-generator subscribe-jwt.yaml
+Loading private key: ./jwt-private...
+Token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTk3Nzg1MTYsImlhdCI6MTUxOTc1NjkxNiwiaXNzIjoiand0LWdlbmVyYXRvciIsInBlcm1pc3Npb25zIjoic3Vic2NyaWJlOmZvbyBzdWJzY3JpYmU6YmFyIn0.kx5SbGjdcDZVTYKJ2YdD_xWpEYPU5nu0iGB0hXPOOHCmnyRZhw-ZppLyRAVrqnav1vklgscIKB7nX3I-KvGOhsxPLMHg1PtTYUB_na1XSXksQU2Jgho34d25nVsv9WE7wJ0cARzjFEC0FYtZeDZk-psybW7I4Am2FfzmxevdXi4-eWizEaK_D0wavRBTNtSrKkMwAPW7ljW-bfs381hbKRUGjTAeGZ36aafmByWHQtn-r35DkT08m60AHpEMg1aI_gwttMNSXcZh1qcim7xgjWvEFf1jpMCT3APC-ymEO-lIDcp8U8Mg3fTHw_01cZemXunUPoYlEhVX928us4-kMQ
+```
+
+To start the service you need configuration that informs gnatsd to use JWT authentication and the location of the public key to use for signature verification.  jwt-public file in the configuration below was created by jwt-generator in its first run.
+
+test.conf:
+```
+listen: 127.0.0.1:4242
+http: 8222
+
+authorization {
+  jwt:   /tmp/jwt-public
+  timeout: 10
+}
+```
+
+Now start the server:
+
+```
+./gnatsd -c test.conf
+```
+
 ## <img src="logos/nats-server.png" width="300">
 [![License][License-Image]][License-Url] [![ReportCard][ReportCard-Image]][ReportCard-Url] [![Build][Build-Status-Image]][Build-Status-Url] [![Release][Release-Image]][Release-Url] [![Coverage][Coverage-Image]][Coverage-Url]
 
