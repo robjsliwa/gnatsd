@@ -44,3 +44,5 @@ coverage.out
 # Cross compiled binaries
 pkg
 
+# Config files
+\test.conf
